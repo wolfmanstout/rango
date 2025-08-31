@@ -9,6 +9,10 @@ import {
 	matchesExtraSelector,
 	matchesHintableSelector,
 } from "../hints/selectors";
+import { settingsSync } from "../settings/settingsSync";
+import { refresh } from "../wrappers/refresh";
+import { onDocumentVisible } from "./whenVisible";
+import { hasVisibleText } from "./hasVisibleText";
 import { isVisible } from "./isVisible";
 
 /**
@@ -89,19 +93,35 @@ export function isHintable(target: Element): boolean {
 		return false;
 	}
 
+	let shouldBeHintable = false;
+
 	if (
 		getExtraHintsToggle() &&
 		(matchesHintableSelector(target) || isHintableExtra(target))
 	) {
-		return true;
+		shouldBeHintable = true;
+	} else if (matchesCustomInclude(target)) {
+		shouldBeHintable = true;
+	} else if (matchesCustomExclude(target) && !getShowExcludedToggle()) {
+		return false;
+	} else {
+		shouldBeHintable =
+			(matchesHintableSelector(target) && !isRedundant(target)) ||
+			matchesStagedSelector(target, true);
 	}
 
-	if (matchesCustomInclude(target)) return true;
+	// Apply text-aware filtering if the setting is enabled
+	if (shouldBeHintable && settingsSync.get("onlyLabelElementsWithoutText")) {
+		return !hasVisibleText(target);
+	}
 
-	if (matchesCustomExclude(target) && !getShowExcludedToggle()) return false;
-
-	return (
-		(matchesHintableSelector(target) && !isRedundant(target)) ||
-		matchesStagedSelector(target, true)
-	);
+	return shouldBeHintable;
 }
+
+async function handleTextLabelingChange() {
+	await refresh({ isHintable: true });
+}
+
+settingsSync.onChange("onlyLabelElementsWithoutText", async () => {
+	onDocumentVisible(handleTextLabelingChange);
+});
