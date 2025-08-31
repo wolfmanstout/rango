@@ -14,3 +14,4 @@ UserSpecific.xcconfig
 xcuserdata
 # Emacs
 *~
+.claude/settings.local.json
