@@ -14,7 +14,7 @@
 		"package:firefox": "cross-env BROWSER=firefox npm run _package",
 		"package:chrome": "cross-env BROWSER=chrome npm run _package",
 		"package": "run-p package:*",
-		"start:firefox": "web-ext run --source-dir dist/firefox",
+		"start:firefox": "web-ext run --source-dir dist/firefox --firefox firefoxdeveloperedition",
 		"start:chrome": "web-ext run --source-dir dist/chrome --target chromium",
 		"build-and-package": "run-s build package",
 		"check-types": "tsc --noemit",
