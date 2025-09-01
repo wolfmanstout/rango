@@ -93,29 +93,29 @@ export function isHintable(target: Element): boolean {
 		return false;
 	}
 
-	let shouldBeHintable = false;
-
 	if (
 		getExtraHintsToggle() &&
 		(matchesHintableSelector(target) || isHintableExtra(target))
 	) {
-		shouldBeHintable = true;
-	} else if (matchesCustomInclude(target)) {
-		shouldBeHintable = true;
-	} else if (matchesCustomExclude(target) && !getShowExcludedToggle()) {
-		return false;
-	} else {
-		shouldBeHintable =
-			(matchesHintableSelector(target) && !isRedundant(target)) ||
-			matchesStagedSelector(target, true);
+		return true;
 	}
 
-	// Apply text-aware filtering if the setting is enabled
-	if (shouldBeHintable && settingsSync.get("onlyHintElementsWithoutText")) {
+	if (matchesCustomInclude(target)) return true;
+
+	if (matchesCustomExclude(target) && !getShowExcludedToggle()) return false;
+
+	// Staged selectors override base hintability logic
+	if (matchesStagedSelector(target, true)) return true;
+
+	// Apply text-aware filtering only to base hintability logic
+	const isDefaultHintable =
+		matchesHintableSelector(target) && !isRedundant(target);
+
+	if (isDefaultHintable && settingsSync.get("onlyHintElementsWithoutText")) {
 		return !hasVisibleText(target);
 	}
 
-	return shouldBeHintable;
+	return isDefaultHintable;
 }
 
 async function handleTextHintingChange() {
