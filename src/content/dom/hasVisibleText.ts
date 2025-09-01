@@ -9,7 +9,13 @@
  */
 function isIconOrImage(element: Element): boolean {
 	return element.matches(
-		"img, svg, i[class*='icon'], i[class*='fa-'], [role='img'], canvas, video, audio"
+		// Standard image and media elements
+		"img, svg, canvas, video, audio, " +
+			// Elements with semantic image role
+			"[role='img'], " +
+			// Icon font patterns - <i> tags with icon-related classes
+			"i[class*='icon'], " + // Generic icon libraries (Material Icons, Bootstrap Icons, etc.)
+			"i[class*='fa-']" // Font Awesome icons (fa-solid, fa-regular, fa-home, etc.)
 	);
 }
 
@@ -68,21 +74,7 @@ function hasActualVisibleText(element: Element): boolean {
 		return false;
 	}
 
-	// For container elements, check if they're mostly interactive vs mostly text
-	if (element.matches("div, nav, section, header, footer, main")) {
-		const interactiveChildren = element.querySelectorAll(
-			"button, a, input, select, textarea, [role='button'], [role='link']"
-		);
-		const textLength = allText.length;
-		const interactiveCount = interactiveChildren.length;
-
-		// If there are many interactive children relative to text, treat as container
-		if (interactiveCount > 0 && textLength / interactiveCount < 10) {
-			return false;
-		}
-	}
-
-	// For all other elements, if they have text content > 1 char, they have visible text
+	// If element has meaningful text content, it has visible text
 	return true;
 }
 
@@ -109,34 +101,6 @@ export function hasVisibleText(element: Element): boolean {
 		return false; // No targetable text, so should be hinted
 	}
 
-	// Check for actual visible text content
-	const hasText = hasActualVisibleText(element);
-
-	// Special handling for interactive elements
-	if (
-		element.matches(
-			"button, [role='button'], a, [role='link'], input, textarea"
-		)
-	) {
-		let textContent: string | undefined;
-
-		if (element.matches("input, textarea")) {
-			const inputElement = element as HTMLInputElement | HTMLTextAreaElement;
-			textContent =
-				inputElement.value?.trim() ||
-				inputElement.placeholder?.trim() ||
-				element.textContent?.trim();
-		} else {
-			textContent = element.textContent?.trim();
-		}
-
-		// If it's very short text (single character), should be hinted
-		if (!textContent || textContent.length <= 1) {
-			return false;
-		}
-
-		return hasText;
-	}
-
-	return hasText;
+	// For all other elements, check if they have meaningful visible text
+	return hasActualVisibleText(element);
 }
