@@ -100,12 +100,12 @@ export function SettingsComponent() {
 				</SettingRow>
 				<SettingRow>
 					<Toggle
-						label="Only label elements without visible text"
-						isPressed={dirtySettings.onlyLabelElementsWithoutText}
+						label="Only hint elements without visible text"
+						isPressed={dirtySettings.onlyHintElementsWithoutText}
 						onClick={() => {
 							handleChange(
-								"onlyLabelElementsWithoutText",
-								!dirtySettings.onlyLabelElementsWithoutText
+								"onlyHintElementsWithoutText",
+								!dirtySettings.onlyHintElementsWithoutText
 							);
 						}}
 					>
@@ -113,7 +113,7 @@ export function SettingsComponent() {
 							Only show hints for elements that don&apos;t have visible text
 							labels, such as icons, images, and unlabeled controls. Elements
 							with clear text like &quot;Submit&quot; buttons or
-							&quot;Home&quot; links will not be labeled.
+							&quot;Home&quot; links will not be hinted.
 						</p>
 					</Toggle>
 				</SettingRow>
