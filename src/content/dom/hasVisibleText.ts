@@ -1,6 +1,6 @@
 /**
  * Utility functions for detecting visible text content in elements.
- * Used to determine if elements should be labeled based on their text content.
+ * Used to determine if elements should be hinted based on their text content.
  */
 
 /**

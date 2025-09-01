@@ -111,17 +111,17 @@ export function isHintable(target: Element): boolean {
 	}
 
 	// Apply text-aware filtering if the setting is enabled
-	if (shouldBeHintable && settingsSync.get("onlyLabelElementsWithoutText")) {
+	if (shouldBeHintable && settingsSync.get("onlyHintElementsWithoutText")) {
 		return !hasVisibleText(target);
 	}
 
 	return shouldBeHintable;
 }
 
-async function handleTextLabelingChange() {
+async function handleTextHintingChange() {
 	await refresh({ isHintable: true });
 }
 
-settingsSync.onChange("onlyLabelElementsWithoutText", async () => {
-	onDocumentVisible(handleTextLabelingChange);
+settingsSync.onChange("onlyHintElementsWithoutText", async () => {
+	onDocumentVisible(handleTextHintingChange);
 });
