@@ -14,21 +14,24 @@ function isIconOrImage(element: Element): boolean {
 }
 
 /**
- * Checks if an element has accessible text through ARIA attributes or title.
- */
-function hasAriaText(element: Element): boolean {
-	return (
-		element.hasAttribute("aria-label") ||
-		element.hasAttribute("aria-labelledby") ||
-		element.hasAttribute("title")
-	);
-}
-
-/**
  * Checks if an element is an unlabeled form control that should be hintable.
  */
 function isUnlabeledFormControl(element: Element): boolean {
 	if (!element.matches("input, select, textarea")) return false;
+
+	// Input buttons (submit, button, reset) with value are self-labeled
+	if (element.matches("input")) {
+		const inputElement = element as HTMLInputElement;
+		const type = inputElement.type;
+
+		if (["submit", "button", "reset"].includes(type)) {
+			// These input types are self-labeled by their value attribute
+			const value = inputElement.value?.trim();
+			if (value && value.length > 1) {
+				return false; // Has visible text via value, not unlabeled
+			}
+		}
+	}
 
 	// Check for associated label element
 	const id = element.getAttribute("id");
@@ -37,7 +40,7 @@ function isUnlabeledFormControl(element: Element): boolean {
 		: null;
 	const wrappingLabel = element.closest("label");
 
-	return !associatedLabel && !wrappingLabel && !hasAriaText(element);
+	return !associatedLabel && !wrappingLabel;
 }
 
 /**
@@ -45,85 +48,91 @@ function isUnlabeledFormControl(element: Element): boolean {
  * This looks for substantial text that would serve as a clear label.
  */
 function hasActualVisibleText(element: Element): boolean {
-	// Get direct text content (not from descendants)
-	const directText = Array.from(element.childNodes)
-		.filter((node) => node.nodeType === Node.TEXT_NODE)
-		.map((node) => node.textContent?.trim())
-		.join(" ")
-		.trim();
+	// Get visible text from element - for inputs, check value/placeholder
+	let allText: string | undefined;
 
-	// If there's substantial direct text, consider it as having text
-	if (directText && directText.length > 2 && /\w{2,}/.test(directText)) {
-		return true;
+	if (element.matches("input, textarea")) {
+		const inputElement = element as HTMLInputElement | HTMLTextAreaElement;
+		// For input elements, check value first, then placeholder, then text content
+		allText =
+			inputElement.value?.trim() ||
+			inputElement.placeholder?.trim() ||
+			element.textContent?.trim();
+	} else {
+		// For other elements, use text content
+		allText = element.textContent?.trim();
 	}
 
-	// For elements that typically contain only text (like paragraphs, headings)
-	if (element.matches("p, h1, h2, h3, h4, h5, h6, span, div")) {
-		const allText = element.textContent?.trim();
-		if (allText && allText.length > 3 && /\w{3,}/.test(allText)) {
-			// Check if this is mostly text vs mostly interactive elements
-			const interactiveChildren = element.querySelectorAll(
-				"button, a, input, select, textarea, [role='button'], [role='link']"
-			);
-			const textLength = allText.length;
-			const interactiveCount = interactiveChildren.length;
+	// If no text at all, definitely no visible text
+	if (!allText || allText.length <= 1 || !/\w+/.test(allText)) {
+		return false;
+	}
 
-			// If there are many interactive children relative to text, treat as container
-			if (interactiveCount > 0 && textLength / interactiveCount < 10) {
-				return false;
-			}
+	// For container elements, check if they're mostly interactive vs mostly text
+	if (element.matches("div, nav, section, header, footer, main")) {
+		const interactiveChildren = element.querySelectorAll(
+			"button, a, input, select, textarea, [role='button'], [role='link']"
+		);
+		const textLength = allText.length;
+		const interactiveCount = interactiveChildren.length;
 
-			return true;
+		// If there are many interactive children relative to text, treat as container
+		if (interactiveCount > 0 && textLength / interactiveCount < 10) {
+			return false;
 		}
 	}
 
-	return false;
+	// For all other elements, if they have text content > 1 char, they have visible text
+	return true;
 }
 
 /**
- * Determines if an element contains visible text content.
+ * Determines if an element contains visible text content that can be targeted by voice.
  *
- * Elements are considered to have "no visible text" (and thus should be hinted) if they are:
+ * The principle: If an element has visible text that can be targeted using voice text selection,
+ * then it doesn't need a Rango hint. Only elements without targetable text need hints.
+ *
+ * Elements are considered to have "no targetable text" (and thus should be hinted) if they are:
  * - Icons, images, or visual-only elements
- * - Unlabeled form controls
- * - Elements without meaningful visible text content
+ * - Form controls without visible labels
+ * - Interactive elements with only single characters or symbols
  *
- * Elements are considered to have "visible text" (and thus should NOT be hinted) if they:
- * - Have ARIA labels or titles
- * - Contain meaningful visible text content
+ * Elements are considered to have "targetable text" (and thus should NOT be hinted) if they:
+ * - Contain multi-character visible text that can be spoken to target the element
  *
  * @param element The element to check
- * @returns false if element should be hinted (no visible text), true if it has visible text
+ * @returns false if element should be hinted (no targetable text), true if it has targetable text
  */
 export function hasVisibleText(element: Element): boolean {
-	// Always hint icons, images, and unlabeled controls
+	// Always hint icons, images, and unlabeled controls - these can't be targeted by voice text selection
 	if (isIconOrImage(element) || isUnlabeledFormControl(element)) {
-		return false; // Treat as "no visible text" so it gets hinted
-	}
-
-	// Elements with ARIA text are considered as having text (unless they're also images/icons)
-	if (hasAriaText(element) && !isIconOrImage(element)) {
-		return true;
+		return false; // No targetable text, so should be hinted
 	}
 
 	// Check for actual visible text content
 	const hasText = hasActualVisibleText(element);
 
 	// Special handling for interactive elements
-	if (element.matches("button, [role='button'], a, [role='link']")) {
-		const textContent = element.textContent?.trim();
+	if (
+		element.matches(
+			"button, [role='button'], a, [role='link'], input, textarea"
+		)
+	) {
+		let textContent: string | undefined;
 
-		// If it's very short text or contains mainly icons, should be hinted
-		if (!textContent || textContent.length <= 2) {
-			return false;
+		if (element.matches("input, textarea")) {
+			const inputElement = element as HTMLInputElement | HTMLTextAreaElement;
+			textContent =
+				inputElement.value?.trim() ||
+				inputElement.placeholder?.trim() ||
+				element.textContent?.trim();
+		} else {
+			textContent = element.textContent?.trim();
 		}
 
-		// Check if it's mainly an icon with some text
-		const hasImageIcon = element.querySelector(
-			"img, svg, i[class*='icon'], i[class*='fa-'], [role='img']"
-		);
-		if (hasImageIcon && textContent.length <= 10) {
-			return false; // Icon buttons with short labels should still be hinted
+		// If it's very short text (single character), should be hinted
+		if (!textContent || textContent.length <= 1) {
+			return false;
 		}
 
 		return hasText;
