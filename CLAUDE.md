@@ -39,6 +39,7 @@ npm run package                  # Package extensions for distribution
 ### Code Quality
 ```bash
 npm run lint                     # Run XO (ESLint), Stylelint, and TypeScript checks
+npm run lint-fix                 # Fix several common lint checks
 npm run check-types              # TypeScript type checking only
 npm run unused-exports           # Find unused exports
 npm run check-format             # Prettier format checking
