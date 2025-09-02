@@ -51,24 +51,34 @@ function hasActualVisibleText(element: Element): boolean {
 	if (element.matches("input, textarea")) {
 		const inputElement = element as HTMLInputElement | HTMLTextAreaElement;
 		// For input elements, check value first, then placeholder, then text content
+		const value = inputElement.value?.trim();
+		const placeholder = inputElement.placeholder?.trim();
+		const textContent = element.textContent?.trim();
+
 		elementText =
-			inputElement.value?.trim() ??
-			inputElement.placeholder?.trim() ??
-			element.textContent?.trim();
+			value && value.length > 0
+				? value
+				: placeholder && placeholder.length > 0
+					? placeholder
+					: textContent;
 	} else if (element.matches("select")) {
 		// For select elements, check if there are meaningful options
 		const selectElement = element as HTMLSelectElement;
 		const options = Array.from(selectElement.options);
-		const meaningfulOptions = options.filter(
-			(option) =>
-				option.textContent?.trim() && option.textContent.trim().length > 1
-		);
+		const meaningfulOptions = options.filter((option) => {
+			const text = option.textContent?.trim();
+			if (!text) return false;
+			// Allow multi-character text or single digits
+			return text.length > 1 || /\d/.test(text);
+		});
 		// If there are meaningful options, the select has targetable content
 		if (meaningfulOptions.length > 0) {
 			return true;
 		}
 
-		elementText = element.textContent?.trim();
+		// For selects without meaningful options, don't use textContent
+		// because it concatenates all option text which may create false positives
+		elementText = undefined;
 	} else {
 		// For other elements, use text content
 		elementText = element.textContent?.trim();
@@ -77,11 +87,17 @@ function hasActualVisibleText(element: Element): boolean {
 	// Check for associated label text for form controls
 	const labelText = getAssociatedLabelText(element);
 
-	// Combine all available text sources
-	const allText = elementText ?? labelText;
+	// Combine all available text sources - prefer element text, fall back to label text
+	const allText =
+		elementText && elementText.length > 0 ? elementText : labelText;
 
 	// If no text at all, definitely no visible text
-	if (!allText || allText.length <= 1 || !/\w+/.test(allText)) {
+	if (!allText || !/\w+/.test(allText)) {
+		return false;
+	}
+
+	// Allow single characters only if they are digits
+	if (allText.length === 1 && !/\d/.test(allText)) {
 		return false;
 	}
 
