@@ -96,6 +96,86 @@ describe("hasVisibleText", () => {
 
 			expect(hasVisibleText(icon)).toBe(false);
 		});
+
+		test("should return false for buttons containing only Material Icons", () => {
+			document.body.insertAdjacentHTML(
+				"beforeend",
+				'<button><i class="material-icons">add</i></button>'
+			);
+			const button = document.body.lastElementChild!;
+
+			expect(hasVisibleText(button)).toBe(false);
+		});
+
+		test("should return false for buttons with nested Material Icons (Workona-style)", () => {
+			document.body.insertAdjacentHTML(
+				"beforeend",
+				'<button><div><div><i class="material-icons">more_vert</i></div></div></button>'
+			);
+			const button = document.body.lastElementChild!;
+
+			expect(hasVisibleText(button)).toBe(false);
+		});
+
+		test("should return true for buttons with Material Icons plus text", () => {
+			document.body.insertAdjacentHTML(
+				"beforeend",
+				'<button><i class="material-icons">add</i> Add Item</button>'
+			);
+			const button = document.body.lastElementChild!;
+
+			expect(hasVisibleText(button)).toBe(true);
+		});
+
+		test("should return false for elements containing only Font Awesome icons", () => {
+			document.body.insertAdjacentHTML(
+				"beforeend",
+				'<button><i class="fa-solid fa-home"></i></button>'
+			);
+			const button = document.body.lastElementChild!;
+
+			expect(hasVisibleText(button)).toBe(false);
+		});
+
+		test("should return false for elements containing only generic icons", () => {
+			document.body.insertAdjacentHTML(
+				"beforeend",
+				'<span><i class="icon-search"></i></span>'
+			);
+			const span = document.body.lastElementChild!;
+
+			expect(hasVisibleText(span)).toBe(false);
+		});
+
+		test("should return false for buttons with Google Symbols (Meet-style)", () => {
+			document.body.insertAdjacentHTML(
+				"beforeend",
+				'<button><span><i class="google-symbols">mic</i></span></button>'
+			);
+			const button = document.body.lastElementChild!;
+
+			expect(hasVisibleText(button)).toBe(false);
+		});
+
+		test("should return false for buttons with Google Symbols and complex nesting", () => {
+			document.body.insertAdjacentHTML(
+				"beforeend",
+				'<button class="complex-button"><span><span><i class="quRWN-Bz112c google-symbols notranslate VfPpkd-kBDsod VcKVTb" aria-hidden="true">mic</i></span></span></button>'
+			);
+			const button = document.body.lastElementChild!;
+
+			expect(hasVisibleText(button)).toBe(false);
+		});
+
+		test("should return true for buttons with Google Symbols plus text", () => {
+			document.body.insertAdjacentHTML(
+				"beforeend",
+				'<button><i class="google-symbols">mic</i> Microphone</button>'
+			);
+			const button = document.body.lastElementChild!;
+
+			expect(hasVisibleText(button)).toBe(true);
+		});
 	});
 
 	describe("Regular Elements with Text", () => {

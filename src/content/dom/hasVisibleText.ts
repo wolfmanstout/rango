@@ -4,19 +4,44 @@
  */
 
 /**
+ * CSS selector for detecting icons, images, and visual-only elements.
+ * Used both for direct element detection and for filtering out icon text content.
+ */
+const iconAndVisualElementsSelector =
+	// Standard image and media elements
+	"img, svg, canvas, video, audio, " +
+	// Elements with semantic image role
+	"[role='img'], " +
+	// Icon font patterns - <i> tags with icon-related classes
+	"i[class*='icon'], " + // Generic icon libraries (Material Icons, Bootstrap Icons, etc.)
+	"i[class*='fa-'], " + // Font Awesome icons (fa-solid, fa-regular, fa-home, etc.)
+	"i[class*='material-icons'], " + // Material Design Icons specifically
+	"i[class*='google-symbols']"; // Google Symbols (used in Google Meet, etc.)
+
+/**
  * Checks if an element is an icon, image, or visual-only element
  * that should always be hintable regardless of text content.
  */
 function isIconOrImage(element: Element): boolean {
-	return element.matches(
-		// Standard image and media elements
-		"img, svg, canvas, video, audio, " +
-			// Elements with semantic image role
-			"[role='img'], " +
-			// Icon font patterns - <i> tags with icon-related classes
-			"i[class*='icon'], " + // Generic icon libraries (Material Icons, Bootstrap Icons, etc.)
-			"i[class*='fa-']" // Font Awesome icons (fa-solid, fa-regular, fa-home, etc.)
-	);
+	return element.matches(iconAndVisualElementsSelector);
+}
+
+/**
+ * Gets text content from an element excluding text that comes from icon descendants.
+ * This helps identify when an element's text is purely from icon fonts vs meaningful content.
+ */
+function getTextExcludingIconDescendants(element: Element): string {
+	// Clone the element to avoid modifying the original DOM
+	const clone = element.cloneNode(true) as Element;
+
+	// Remove all icon elements from the clone using the same selector
+	const iconElements = clone.querySelectorAll(iconAndVisualElementsSelector);
+	for (const iconElement of iconElements) {
+		iconElement.remove();
+	}
+
+	// Return the remaining text content
+	return clone.textContent?.trim() ?? "";
 }
 
 /**
@@ -53,7 +78,7 @@ function hasActualVisibleText(element: Element): boolean {
 		// For input elements, check value first, then placeholder, then text content
 		const value = inputElement.value?.trim();
 		const placeholder = inputElement.placeholder?.trim();
-		const textContent = element.textContent?.trim();
+		const textContent = getTextExcludingIconDescendants(element);
 
 		elementText =
 			value && value.length > 0
@@ -80,8 +105,8 @@ function hasActualVisibleText(element: Element): boolean {
 		// because it concatenates all option text which may create false positives
 		elementText = undefined;
 	} else {
-		// For other elements, use text content
-		elementText = element.textContent?.trim();
+		// For other elements, use text content excluding icon descendants
+		elementText = getTextExcludingIconDescendants(element);
 	}
 
 	// Check for associated label text for form controls
