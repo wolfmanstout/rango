@@ -22,6 +22,12 @@ window.addEventListener("message", (event) => {
 });
 
 function startClipboardWriteInterception() {
+	console.log('[Rango Debug] Starting clipboard write interception', {
+		writeAlreadyPatched: window.navigator.clipboard.write !== originalClipboardWrite,
+		writeTextAlreadyPatched: window.navigator.clipboard.writeText !== originalClipboardWriteText,
+		execCommandAlreadyPatched: document.execCommand !== originalDocumentExecCommand
+	});
+
 	window.navigator.clipboard.write = async () => {
 		postMessageClipboardWriteIntercepted();
 		stopClipboardWriteInterception();
@@ -49,6 +55,12 @@ function startClipboardWriteInterception() {
 }
 
 function stopClipboardWriteInterception() {
+	console.log('[Rango Debug] Stopping clipboard write interception', {
+		currentWriteIsPatched: window.navigator.clipboard.write !== originalClipboardWrite,
+		currentWriteTextIsPatched: window.navigator.clipboard.writeText !== originalClipboardWriteText,
+		currentExecCommandIsPatched: document.execCommand !== originalDocumentExecCommand
+	});
+
 	document.execCommand = originalDocumentExecCommand;
 	window.navigator.clipboard.write = originalClipboardWrite;
 	window.navigator.clipboard.writeText = originalClipboardWriteText;
