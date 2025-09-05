@@ -215,13 +215,20 @@ async function injectClipboardWriteInterceptor() {
 		document.head.append(script);
 
 		await new Promise<void>((resolve) => {
-			window.addEventListener("message", (event) => {
+			const messageHandler = (event: MessageEvent) => {
 				if (event.origin !== globalThis.location.origin) return;
 
 				if (event.data.type === "RANGO_INTERCEPTOR_LOADED") {
+					console.log(
+						"[Rango Debug] Clipboard interceptor loaded successfully"
+					);
+					window.removeEventListener("message", messageHandler);
 					resolve();
 				}
-			});
+			};
+
+			console.log("[Rango Debug] Injecting clipboard write interceptor script");
+			window.addEventListener("message", messageHandler);
 
 			window.postMessage(
 				{ type: "RANGO_CHECK_INTERCEPTOR_LOADED" },
