@@ -1,6 +1,24 @@
-const originalDocumentExecCommand = document.execCommand;
-const originalClipboardWrite = window.navigator.clipboard.write;
-const originalClipboardWriteText = window.navigator.clipboard.writeText;
+// Prevent capturing already-patched functions if script is re-injected
+const originalDocumentExecCommand = window.rangoOriginalExecCommand || document.execCommand;
+const originalClipboardWrite = window.rangoOriginalClipboardWrite || window.navigator.clipboard.write;
+const originalClipboardWriteText = window.rangoOriginalClipboardWriteText || window.navigator.clipboard.writeText;
+
+// Store originals globally to prevent re-injection issues
+window.rangoOriginalExecCommand = originalDocumentExecCommand;
+window.rangoOriginalClipboardWrite = originalClipboardWrite; 
+window.rangoOriginalClipboardWriteText = originalClipboardWriteText;
+
+console.log('[Rango Debug] Clipboard interceptor script loaded', {
+	isReinjection: !!window.rangoClipboardInterceptorLoaded,
+	capturedOriginalFunctions: {
+		execCommand: originalDocumentExecCommand.name || 'anonymous',
+		clipboardWrite: originalClipboardWrite.name || 'anonymous', 
+		clipboardWriteText: originalClipboardWriteText.name || 'anonymous'
+	}
+});
+
+// Mark that the script has been loaded
+window.rangoClipboardInterceptorLoaded = true;
 
 window.addEventListener("message", (event) => {
 	if (event.origin !== window.location.origin) return;
@@ -58,7 +76,12 @@ function stopClipboardWriteInterception() {
 	console.log('[Rango Debug] Stopping clipboard write interception', {
 		currentWriteIsPatched: window.navigator.clipboard.write !== originalClipboardWrite,
 		currentWriteTextIsPatched: window.navigator.clipboard.writeText !== originalClipboardWriteText,
-		currentExecCommandIsPatched: document.execCommand !== originalDocumentExecCommand
+		currentExecCommandIsPatched: document.execCommand !== originalDocumentExecCommand,
+		restoringToFunctions: {
+			execCommand: originalDocumentExecCommand.name || 'anonymous',
+			clipboardWrite: originalClipboardWrite.name || 'anonymous',
+			clipboardWriteText: originalClipboardWriteText.name || 'anonymous'
+		}
 	});
 
 	document.execCommand = originalDocumentExecCommand;
