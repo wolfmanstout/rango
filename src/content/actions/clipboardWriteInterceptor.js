@@ -8,14 +8,12 @@ window.rangoOriginalExecCommand = originalDocumentExecCommand;
 window.rangoOriginalClipboardWrite = originalClipboardWrite; 
 window.rangoOriginalClipboardWriteText = originalClipboardWriteText;
 
-console.log('[Rango Debug] Clipboard interceptor script loaded', {
-	isReinjection: !!window.rangoClipboardInterceptorLoaded,
-	capturedOriginalFunctions: {
-		execCommand: originalDocumentExecCommand.name || 'anonymous',
-		clipboardWrite: originalClipboardWrite.name || 'anonymous', 
-		clipboardWriteText: originalClipboardWriteText.name || 'anonymous'
-	}
-});
+const isReinjection = !!window.rangoClipboardInterceptorLoaded;
+const execName = originalDocumentExecCommand.name || 'anonymous';
+const writeName = originalClipboardWrite.name || 'anonymous';
+const writeTextName = originalClipboardWriteText.name || 'anonymous';
+
+console.log(`[Rango Debug] Clipboard interceptor script loaded - isReinjection: ${isReinjection}, functions: execCommand=${execName}, clipboardWrite=${writeName}, clipboardWriteText=${writeTextName}`);
 
 // Mark that the script has been loaded
 window.rangoClipboardInterceptorLoaded = true;
@@ -40,11 +38,11 @@ window.addEventListener("message", (event) => {
 });
 
 function startClipboardWriteInterception() {
-	console.log('[Rango Debug] Starting clipboard write interception', {
-		writeAlreadyPatched: window.navigator.clipboard.write !== originalClipboardWrite,
-		writeTextAlreadyPatched: window.navigator.clipboard.writeText !== originalClipboardWriteText,
-		execCommandAlreadyPatched: document.execCommand !== originalDocumentExecCommand
-	});
+	const writePatched = window.navigator.clipboard.write !== originalClipboardWrite;
+	const writeTextPatched = window.navigator.clipboard.writeText !== originalClipboardWriteText;
+	const execPatched = document.execCommand !== originalDocumentExecCommand;
+	
+	console.log(`[Rango Debug] Starting clipboard write interception - writeAlreadyPatched: ${writePatched}, writeTextAlreadyPatched: ${writeTextPatched}, execCommandAlreadyPatched: ${execPatched}`);
 
 	window.navigator.clipboard.write = async () => {
 		postMessageClipboardWriteIntercepted();
@@ -73,16 +71,14 @@ function startClipboardWriteInterception() {
 }
 
 function stopClipboardWriteInterception() {
-	console.log('[Rango Debug] Stopping clipboard write interception', {
-		currentWriteIsPatched: window.navigator.clipboard.write !== originalClipboardWrite,
-		currentWriteTextIsPatched: window.navigator.clipboard.writeText !== originalClipboardWriteText,
-		currentExecCommandIsPatched: document.execCommand !== originalDocumentExecCommand,
-		restoringToFunctions: {
-			execCommand: originalDocumentExecCommand.name || 'anonymous',
-			clipboardWrite: originalClipboardWrite.name || 'anonymous',
-			clipboardWriteText: originalClipboardWriteText.name || 'anonymous'
-		}
-	});
+	const writeIsPatched = window.navigator.clipboard.write !== originalClipboardWrite;
+	const writeTextIsPatched = window.navigator.clipboard.writeText !== originalClipboardWriteText;
+	const execIsPatched = document.execCommand !== originalDocumentExecCommand;
+	const restoreExecName = originalDocumentExecCommand.name || 'anonymous';
+	const restoreWriteName = originalClipboardWrite.name || 'anonymous';
+	const restoreWriteTextName = originalClipboardWriteText.name || 'anonymous';
+	
+	console.log(`[Rango Debug] Stopping clipboard write interception - currentWriteIsPatched: ${writeIsPatched}, currentWriteTextIsPatched: ${writeTextIsPatched}, currentExecCommandIsPatched: ${execIsPatched}, restoringTo: execCommand=${restoreExecName}, clipboardWrite=${restoreWriteName}, clipboardWriteText=${restoreWriteTextName}`);
 
 	document.execCommand = originalDocumentExecCommand;
 	window.navigator.clipboard.write = originalClipboardWrite;
