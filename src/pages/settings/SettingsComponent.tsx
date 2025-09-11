@@ -5,6 +5,7 @@ import { settings } from "../../common/settings/settings";
 import { type Settings } from "../../common/settings/settingsSchema";
 import { CustomHintsSetting } from "./CustomHintsSetting";
 import { ExcludeKeysSetting } from "./ExcludeKeysSetting";
+import { ExcludedSitesSetting } from "./ExcludedSitesSetting";
 import { NumberInput } from "./NumberInput";
 import { Radio, RadioGroup } from "./RadioGroup";
 import { Option, Select } from "./Select";
@@ -631,6 +632,17 @@ export function SettingsComponent() {
 						value={dirtySettings.customSelectors}
 						onChange={(value) => {
 							handleChange("customSelectors", value);
+						}}
+					/>
+				</SettingRow>
+			</SettingsGroup>
+
+			<SettingsGroup label="Excluded Sites">
+				<SettingRow>
+					<ExcludedSitesSetting
+						value={dirtySettings.excludedSites}
+						onChange={(value) => {
+							handleChange("excludedSites", value);
 						}}
 					/>
 				</SettingRow>

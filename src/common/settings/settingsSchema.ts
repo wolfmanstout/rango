@@ -2,6 +2,7 @@ import Color from "colorjs.io";
 import { z } from "zod";
 import { isValidRegExp } from "../isValidRegExp";
 import { isValidSelector } from "../isValidSelector";
+import { isValidGlobPattern } from "../isValidGlobPattern";
 
 const zCustomSelector = z.object({
 	pattern: z.string(),
@@ -185,6 +186,18 @@ export const settingsSchema = z.object({
 		.default("relatedAfterCurrent"),
 	directClickWithNoFocusedDocument: z.boolean().default(false),
 	directClickWhenEditing: z.boolean().default(true),
+
+	// Site exclusions
+	excludedSites: z
+		.array(z.string())
+		.default([])
+		.transform((value) =>
+			value
+				.filter(
+					(pattern) => pattern.trim() && isValidGlobPattern(pattern.trim())
+				)
+				.map((pattern) => pattern.trim())
+		),
 });
 
 function isValidColor(colorString: string) {
