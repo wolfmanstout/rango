@@ -219,15 +219,11 @@ async function injectClipboardWriteInterceptor() {
 				if (event.origin !== globalThis.location.origin) return;
 
 				if (event.data.type === "RANGO_INTERCEPTOR_LOADED") {
-					console.log(
-						"[Rango Debug] Clipboard interceptor loaded successfully"
-					);
 					window.removeEventListener("message", messageHandler);
 					resolve();
 				}
 			};
 
-			console.log("[Rango Debug] Injecting clipboard write interceptor script");
 			window.addEventListener("message", messageHandler);
 
 			window.postMessage(
