@@ -44,16 +44,34 @@ describe("matchesGlobPattern", () => {
 		);
 	});
 
-	test("handles question mark wildcards", () => {
+	test("treats question mark as literal character", () => {
+		// Question marks in URLs (query strings) should be matched literally
 		expect(
-			matchesGlobPattern("https://a.example.com", ["https://?.example.com"])
+			matchesGlobPattern("https://example.com/page?id=123", [
+				"*://example.com/page?id=*",
+			])
 		).toBe(true);
 		expect(
-			matchesGlobPattern("https://ab.example.com", ["https://?.example.com"])
+			matchesGlobPattern("https://example.com/pageXid=123", [
+				"*://example.com/page?id=*",
+			])
 		).toBe(false);
+	});
+
+	test("handles URLs with commas correctly", () => {
+		// Commas in URLs should be matched literally, not treated as alternation
 		expect(
-			matchesGlobPattern("https://x.example.com", ["https://?.example.com"])
+			matchesGlobPattern("https://example.com/a,b,c", ["*://example.com/a,b,c"])
 		).toBe(true);
+		expect(
+			matchesGlobPattern("https://example.com/a,b,c", ["*://other.com/*"])
+		).toBe(false);
+		// Commas in patterns without braces should be literal
+		expect(
+			matchesGlobPattern("https://example.com/path", [
+				"*://example.com/path,with,commas",
+			])
+		).toBe(false);
 	});
 
 	test("handles brace patterns", () => {

@@ -1,8 +1,8 @@
+import { matchesGlobPattern } from "../../common/matchesGlobPattern";
 import { initKeyboardClicking } from "../actions/keyboardClicking";
 import { updateCustomSelectors } from "../hints/selectors";
 import observe from "../observe";
 import { settingsSync } from "../settings/settingsSync";
-import { isExcludedSite } from "../../common/isExcludedSite";
 import { loadContentScriptContext } from "./contentScriptContext";
 import { updateTitleDecorations } from "./decorateTitle";
 import { loadDevtoolsUtils } from "./devtoolsUtils";
@@ -18,7 +18,7 @@ export async function initContentScript() {
 
 	// Check if current site should be excluded from Rango functionality
 	const excludedSites = settingsSync.get("excludedSites");
-	if (isExcludedSite(location.href, excludedSites)) {
+	if (matchesGlobPattern(location.href, excludedSites)) {
 		console.debug(
 			"Rango: Skipping initialization for excluded site:",
 			location.href

@@ -1,17 +1,19 @@
 /**
  * Converts a glob pattern to a regular expression for URL matching.
- * Supports common glob patterns like *, ?, [], and {} braces.
+ * Supports * wildcard and {a,b} brace expansion.
  */
 function globToRegex(pattern: string): RegExp {
-	// Escape special regex characters except glob ones
+	// Escape special regex characters (including ? which is treated as literal)
 	let regexPattern = pattern
-		.replaceAll(/[.+^$()[\]\\]/g, "\\$&") // Escape regex special chars (excluding {} for brace expansion)
-		.replaceAll("*", ".*") // * matches any sequence
-		.replaceAll("?", "."); // ? matches single character
+		.replaceAll(/[.+^$()[\]\\?]/g, "\\$&")
+		.replaceAll("*", ".*"); // * matches any sequence
 
 	// Handle brace expansion: {a,b} becomes (a|b)
-	regexPattern = regexPattern.replaceAll(/{([^}]+)}/g, "($1)");
-	regexPattern = regexPattern.replaceAll(",", "|"); // Handle comma-separated alternatives
+	// Replace commas with pipes only inside the brace groups
+	regexPattern = regexPattern.replaceAll(
+		/{([^}]+)}/g,
+		(_, content: string) => `(${content.replaceAll(",", "|")})`
+	);
 
 	return new RegExp(`^${regexPattern}$`, "i");
 }
