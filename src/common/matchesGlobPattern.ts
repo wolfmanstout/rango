@@ -8,9 +8,9 @@ function globToRegex(pattern: string): RegExp {
 		.replaceAll(/[.+^$()[\]\\]/g, "\\$&") // Escape regex special chars (excluding {} for brace expansion)
 		.replaceAll("*", ".*") // * matches any sequence
 		.replaceAll("?", "."); // ? matches single character
-	
+
 	// Handle brace expansion: {a,b} becomes (a|b)
-	regexPattern = regexPattern.replaceAll(/\{([^}]+)\}/g, "($1)");
+	regexPattern = regexPattern.replaceAll(/{([^}]+)}/g, "($1)");
 	regexPattern = regexPattern.replaceAll(",", "|"); // Handle comma-separated alternatives
 
 	return new RegExp(`^${regexPattern}$`, "i");

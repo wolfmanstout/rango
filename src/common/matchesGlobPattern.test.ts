@@ -76,10 +76,14 @@ describe("matchesGlobPattern", () => {
 
 	test("case insensitive matching", () => {
 		expect(
-			matchesGlobPattern("https://MEET.GOOGLE.COM/abc-def", ["*://meet.google.com/*"])
+			matchesGlobPattern("https://MEET.GOOGLE.COM/abc-def", [
+				"*://meet.google.com/*",
+			])
 		).toBe(true);
 		expect(
-			matchesGlobPattern("https://meet.google.com/xyz", ["*://MEET.GOOGLE.COM/*"])
+			matchesGlobPattern("https://meet.google.com/xyz", [
+				"*://MEET.GOOGLE.COM/*",
+			])
 		).toBe(true);
 	});
 
