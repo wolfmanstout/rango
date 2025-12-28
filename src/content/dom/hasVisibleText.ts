@@ -27,21 +27,54 @@ function isIconOrImage(element: Element): boolean {
 }
 
 /**
- * Gets text content from an element excluding text that comes from icon descendants.
- * This helps identify when an element's text is purely from icon fonts vs meaningful content.
+ * Checks if an element is hidden via CSS (display: none or visibility: hidden).
+ */
+function isElementHidden(element: Element): boolean {
+	const style = getComputedStyle(element);
+	return style.display === "none" || style.visibility === "hidden";
+}
+
+/**
+ * Gets text content from an element excluding text that comes from icon descendants
+ * and hidden elements. This helps identify when an element's text is purely from
+ * icon fonts or hidden badges vs meaningful visible content.
  */
 function getTextExcludingIconDescendants(element: Element): string {
-	// Clone the element to avoid modifying the original DOM
-	const clone = element.cloneNode(true) as Element;
+	const texts: string[] = [];
 
-	// Remove all icon elements from the clone using the same selector
-	const iconElements = clone.querySelectorAll(iconAndVisualElementsSelector);
-	for (const iconElement of iconElements) {
-		iconElement.remove();
+	function collectVisibleText(node: Node) {
+		if (node.nodeType === Node.TEXT_NODE) {
+			texts.push(node.textContent ?? "");
+			return;
+		}
+
+		if (node.nodeType === Node.ELEMENT_NODE) {
+			const el = node as Element;
+
+			// Skip icon elements
+			if (el.matches(iconAndVisualElementsSelector)) {
+				return;
+			}
+
+			// Skip hidden elements
+			if (isElementHidden(el)) {
+				return;
+			}
+
+			// Recurse into children
+			for (const child of node.childNodes) {
+				collectVisibleText(child);
+			}
+		}
 	}
 
-	// Return the remaining text content
-	return clone.textContent?.trim() ?? "";
+	// Start from children to avoid checking the element itself for visibility
+	// (the element might be hidden but we still want to check what text it would have)
+	for (const child of element.childNodes) {
+		collectVisibleText(child);
+	}
+
+	return texts.join("").trim();
 }
 
 /**

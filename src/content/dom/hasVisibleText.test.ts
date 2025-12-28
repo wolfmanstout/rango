@@ -650,4 +650,66 @@ describe("hasVisibleText", () => {
 			expect(hasVisibleText(input)).toBe(true);
 		});
 	});
+
+	describe("Hidden Elements", () => {
+		test("should return false for button with only hidden badge text (Google Docs style)", () => {
+			document.body.insertAdjacentHTML(
+				"beforeend",
+				`
+				<div role="button">
+					<div class="icon-container">&nbsp;</div>
+					<span style="display: none;">0</span>
+				</div>
+			`
+			);
+			const button = document.body.lastElementChild!;
+
+			expect(hasVisibleText(button)).toBe(false);
+		});
+
+		test("should return false for element with all text in hidden children", () => {
+			document.body.insertAdjacentHTML(
+				"beforeend",
+				`
+				<div>
+					<span style="display: none;">Hidden text</span>
+					<span style="visibility: hidden;">Also hidden</span>
+				</div>
+			`
+			);
+			const div = document.body.lastElementChild!;
+
+			expect(hasVisibleText(div)).toBe(false);
+		});
+
+		test("should return true for element with visible text and hidden badge", () => {
+			document.body.insertAdjacentHTML(
+				"beforeend",
+				`
+				<button>
+					Click me
+					<span style="display: none;">99</span>
+				</button>
+			`
+			);
+			const button = document.body.lastElementChild!;
+
+			expect(hasVisibleText(button)).toBe(true);
+		});
+
+		test("should return true when only some children are hidden", () => {
+			document.body.insertAdjacentHTML(
+				"beforeend",
+				`
+				<div>
+					<span style="display: none;">Hidden</span>
+					<span>Visible text here</span>
+				</div>
+			`
+			);
+			const div = document.body.lastElementChild!;
+
+			expect(hasVisibleText(div)).toBe(true);
+		});
+	});
 });
