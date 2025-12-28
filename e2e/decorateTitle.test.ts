@@ -1,11 +1,34 @@
+import { TargetType } from "puppeteer";
 import { sleep } from "./utils/testHelpers";
 
 // There is another tab open before the current one that also gets a marker.
 // That's why we have to use this one.
 const tabMarker = "B";
 
+async function getServiceWorker() {
+	const workerTarget = await browser.waitForTarget(
+		(target) => target.type() === TargetType.SERVICE_WORKER
+	);
+	return (await workerTarget.worker())!;
+}
+
+async function setSetting<T>(key: string, value: T) {
+	const worker = await getServiceWorker();
+	await worker.evaluate(
+		async ({ key, value }) => {
+			await chrome.storage.sync.set({ [key]: value });
+		},
+		{ key, value }
+	);
+}
+
 beforeAll(async () => {
 	await page.goto("http://localhost:8080/basic.html");
+});
+
+afterAll(async () => {
+	// Reset setting to default
+	await setSetting("useCompactTabMarkerDelimiter", false);
 });
 
 test("The URL and the tab marker are attached to the title", async () => {
@@ -46,5 +69,17 @@ test("If the hash changes the URL in the title is updated", async () => {
 
 	expect(title).toBe(
 		`${tabMarker} | Document - http://localhost:8080/new.html#first`
+	);
+});
+
+test("Compact delimiter uses | instead of  |  when setting is enabled", async () => {
+	await setSetting("useCompactTabMarkerDelimiter", true);
+	await page.goto("http://localhost:8080/basic.html");
+	await sleep(500);
+
+	const title = await page.title();
+
+	expect(title).toBe(
+		`${tabMarker}|Document - http://localhost:8080/basic.html`
 	);
 });

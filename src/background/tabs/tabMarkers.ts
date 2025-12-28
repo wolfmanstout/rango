@@ -191,7 +191,8 @@ function createTabMarkers(): TabMarkers {
 }
 
 function getMarkerFromTitle(title: string) {
-	return /^([a-z]{1,2}) \| /i.exec(title)?.[1]?.toLowerCase();
+	// Match both compact "|" and normal " | " delimiters
+	return /^([a-z]{1,2}) ?\| ?/i.exec(title)?.[1]?.toLowerCase();
 }
 
 function isTabWithId(
